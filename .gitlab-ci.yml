@@ -1,0 +1,60 @@
+variables:
+  IMAGE_NAME: musicman123/music_man_docker_repo
+  IMAGE_TAG: tweets_app_backend
+
+stages:
+  - test
+  - build
+  - deploy
+
+run_tests:
+  stage: test
+  image: node
+  before_script:
+    - apt-get update && npm install
+  script:
+    - npm run lint:js
+
+build_image:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASS
+  script:
+    - docker build --build-arg PORT=$PORT --build-arg DB_HOST=$DB_HOST -t
+      $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+deploy:
+  stage: deploy
+  before_script:
+    - chmod 400 $SSH_KEY
+  script:
+    - ssh -o StrictHostKeyChecking=no -i $SSH_KEY ubuntu@$HOST_IP " docker login
+      -u $DOCKER_USERNAME -p $DOCKER_PASS && docker stop $IMAGE_TAG;docker rm
+      $IMAGE_TAG || true && docker rmi $IMAGE_NAME:$IMAGE_TAG || true && docker
+      run --name $IMAGE_TAG --restart unless-stopped -d -p 4000:4000
+      $IMAGE_NAME:$IMAGE_TAG"
+#
+#----second time---
+# script:
+#   - ssh -o StrictHostKeyChecking=no -i $SSH_KEY ubuntu@3.70.160.202 " docker
+#     login -u $DOCKER_USERNAME -p $DOCKER_PASS && docker stop $IMAGE_TAG &&
+#     docker rm $IMAGE_TAG && docker rmi $IMAGE_NAME:$IMAGE_TAG && docker run
+#     --name $IMAGE_TAG --restart unless-stopped -p 4000:4000 -d
+#     $IMAGE_NAME:$IMAGE_TAG"
+#
+#---first time deploy---
+#
+# deploy:
+#   stage: deploy
+#   before_script:
+#     - chmod 400 $SSH_KEY
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY ubuntu@3.70.160.202 " docker
+#       login -u $DOCKER_USERNAME -p $DOCKER_PASS && docker run --name $IMAGE_TAG
+#       --restart unless-stopped -p 4000:4000 -d $IMAGE_NAME:$IMAGE_TAG"
