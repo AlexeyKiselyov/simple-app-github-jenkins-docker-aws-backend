@@ -36,7 +36,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build . --build-arg PORT=${PORT} --build-arg DB_HOST=${DB_HOST} -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+                    sh "docker build . -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} --build-arg PORT=${PORT} --build-arg DB_HOST=${DB_HOST}"
                 }
             }
         }
