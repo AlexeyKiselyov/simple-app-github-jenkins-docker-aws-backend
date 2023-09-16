@@ -14,8 +14,6 @@ pipeline {
 
         DB_HOST = credentials('db_host')
 
-        REACT_APP_API_URL = 'http://localhost:4000/api/'
-
         PORT = '4000'
     }
     
