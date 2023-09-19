@@ -6,7 +6,7 @@ pipeline {
 
         DOCKER_IMAGE_TAG = 'simple-app-back'
 
-        EC2_SERVER = '3.123.59.126' 
+        EC2_SERVER = '3.120.153.62' 
 
         DOCKERHUB_USERNAME = credentials('dockerhub_username')      
         
@@ -19,19 +19,14 @@ pipeline {
     
 
     stages {
-        // stage('Test') {
-        //     agent {
-        //         docker {
-        //             image 'node'                   
-        //             reuseNode true
-        //         }
-        //     }
-        //     steps {
-        //         sh 'apt-get update'
-        //         sh 'npm install'
-        //         sh 'npm run lint:js'
-        //     }
-        // }
+        stage('Test') {
+            steps {
+                script {    
+                    sh 'npm install && npm run lint:js'
+                    sh 'rm -R node_modules'
+                }                  
+            }
+        }
         
         stage('Build Docker Image') {
             steps {
@@ -45,7 +40,6 @@ pipeline {
             steps {
                 script {
                     sh "docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASS}"
-
                     sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
                 }
             }
